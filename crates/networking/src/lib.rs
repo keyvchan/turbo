@@ -1,14 +1,30 @@
-pub fn add(left: usize, right: usize) -> usize {
-    left + right
-}
+use tracing::error;
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+// get html content use reqwest
+pub async fn get_html_content(url: &str) -> Option<String> {
+    let client = reqwest::Client::new();
+    // disable the javascript for the page
 
-    #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
+    let res = client
+        .get(url)
+        .header("X-JAVASCRIPT-ENABLED", "false")
+        .send()
+        .await;
+
+    match res {
+        Ok(res) => {
+            let text = res.text().await;
+            match text {
+                Ok(text) => Some(text),
+                Err(e) => {
+                    error!("error: {}", e);
+                    None
+                }
+            }
+        }
+        Err(e) => {
+            error!("error: {}", e);
+            None
+        }
     }
 }
